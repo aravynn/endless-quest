@@ -2,7 +2,8 @@ import React from 'react';
 
 //global game data.
 //import {dice, weapons, armors, classes, races, monsters} from 'gamedata';
-import {monsters, furniture} from './gamedata';
+import {monsters, furniture, classes, races} from './gamedata';
+import {TurnControl} from './turncontrol';
 
 // globally required for the map size.
 const mapSquare = 37;
@@ -15,20 +16,14 @@ class EndlessApp extends React.Component {
 
         this.state = {
             gameStart : true,   // define what screen to load.
-            initiative: [
-                {p: "player", i: 0},
-                {p: "player", i: 1},
-                {p: "player", i: 2},
-                {p: "player", i: 3},
-                {p: "zargon", i: 0} // all of zargons creatures at once.
-
-            ],
             player : [
-                {x : 1, y: 14},
-                {x : 2, y: 14},
-                {x : 1, y: 15},
-                {x : 2, y: 15},
+                {x : 1, y: 14, playerName: '1', Race: 0, Class: 0},
+                {x : 2, y: 14, playerName: '2', Race: 1, Class: 1},
+                {x : 1, y: 15, playerName: '3', Race: 2, Class: 2},
+                {x : 2, y: 15, playerName: '4', Race: 3, Class: 3},
+                {x:-1,  y: -1, playerName: 'Z'}
             ],
+            currentPlayer : 0,
             gameMap : {
                 // build as checking right and down for if a space is in a room. 
                 //if it is, we'll make a wall.
@@ -106,7 +101,7 @@ class EndlessApp extends React.Component {
 
                 ],
                 creatures : [
-                    {group: "Undead", level: 0, x: 2, y: 2},
+                    {group: "Undead", level: 0, x: 2, y: 2 },
                     {group: "Undead", level: 0, x: 3, y: 2},
                     {group: "Undead", level: 1, x: 6, y: 1},
                     {group: "Undead", level: 2, x: 6, y: 2},
@@ -276,16 +271,196 @@ class EndlessApp extends React.Component {
 
         // heros
         this.state.player.forEach((d, i) =>{
-            mapping.imap[d.y][d.x] = {type: "hero", number: i, used: false, pair: false};
+            if(d.playerName !== 'Z'){
+                mapping.imap[d.y][d.x] = {type: "hero", number: i, used: false, pair: false};
+            }
         });
 
+        this.setPlayerDefaults();
+
         // clickmap generation, temp for now.
-        mapping.stepmap = this.findPath(14, 2, 8, mapping.imap, mapping.compMap);
+        mapping.stepmap = this.findPath(
+                this.state.player[this.state.currentPlayer].y, 
+                this.state.player[this.state.currentPlayer].x, 
+                this.state.player[this.state.currentPlayer].stepsRemain, 
+                mapping.imap, 
+                mapping.compMap
+            );
 
         this.setState({
             gameMap : mapping    
         });
 
+        // set the defaults for creature statistics
+        this.setMonsterDefaults();
+        
+
+    }
+
+    componentDidUpdate() {
+        if( this.state.player[this.state.currentPlayer].playerName === 'Z'){
+            // monsters turn. 
+            
+            // move us to the next turn.
+            let currentPlayer = this.state.currentPlayer;
+            
+        //    alert(stepsRemain);
+
+            if(this.state.player[currentPlayer].playerName === 'Z'){
+                currentPlayer = 0;
+            } else { 
+                currentPlayer++;
+            }
+            this.setState({currentPlayer : currentPlayer});
+
+            let speed = this.state.player[currentPlayer].Speed;
+
+            
+            let mapping = this.state.gameMap;
+
+            let players = this.state.player;
+            players[currentPlayer].stepsRemain = speed;
+            this.setState({player : players});
+            
+
+            // clickmap generation, temp for now.
+            mapping.stepmap = this.findPath(this.state.player[currentPlayer].y, this.state.player[currentPlayer].x, speed, mapping.imap, mapping.compMap);
+
+            this.setState({
+                gameMap : mapping    
+            });
+        }
+    }
+
+    createIMap = () => {
+        // NEEDS TO BE FIXED AND IMPLEMENTED----------------------------------------------------------------!!
+        // externally generate the iMap we'll use for interaction. updates on each move.
+        let mapping = this.state.gameMap;
+        let imap = Array(mapping.height);
+
+        for(let y = 0; y < mapping.height; y++){
+            imap[y] = Array(mapping.width).fill(0); // 0 is for movable.
+        }
+        
+        // doors
+        mapping.door.forEach((d, i) => {
+            // assign door after determining Xand Y for WHERE door is.
+            imap[d.y1][d.x1] = {type: "door", number: i, used: false, pair: [d.y2, d.x2]};
+            imap[d.y2][d.x2] = {type: "door", number: i, used: false, pair: [d.y1, d.x1]};
+            
+        });
+        
+        // map objects
+        mapping.furniture.forEach((data, index) => {
+            // imap more complicated here. for impassible object
+            // that have no interaction we need to set as -1
+            // everything else is set as array for number etc.
+            let f = furniture[data.type];
+            let h = f.h;
+            let w = f.w;
+            if(data.rotate === "e" || data.rotate === "w"){
+                // swap width/height
+                let d = h;
+                h = w;
+                w = d;
+            }
+            for(let y = data.y; y < data.y + h; y++){
+                for(let x = data.x; x < data.x + w; x++){
+                    if(f.blockMove){
+                        imap[y][x] = -1; // inactive, blocked.
+                    } else {
+                        //interaction
+                        imap[y][x] = {type: "furniture", number: index, used: false, pair: false};
+                    }
+                }
+            }
+
+        });
+
+        // map creatures, heros to imap
+        mapping.creatures.forEach((d, i) => {
+            imap[d.y][d.x] = {type: "monster", number: i, used: false, pair: false};
+        });
+
+        // heros
+        this.state.player.forEach((d, i) =>{
+            if(d.playerName !== 'Z'){
+                imap[d.y][d.x] = {type: "hero", number: i, used: false, pair: false};
+            }
+        });
+
+        return imap;
+
+    }
+
+    setMonsterDefaults = () => {
+        let creatures = this.state.gameMap.creatures;
+
+        creatures.forEach((creature, index) => {
+            
+            let monsterStat;
+
+            switch(creature.group){
+                case 'Beasts':
+                    monsterStat = monsters.Beasts[creature.level];
+                    break;
+                case 'Undead':
+                    monsterStat = monsters.Undead[creature.level];
+                    break;
+                case 'Chaos':
+                    monsterStat = monsters.Chaos[creature.level];
+                    break;
+                case 'Boss':
+                    monsterStat = monsters.Boss[creature.level];
+                    break;
+                default:
+                    alert("Error: Cannot find monster group " + creature.group);
+                    break;
+            }
+
+            monsters[index] = {
+                group: creature.group, 
+                level: creature.level, 
+                x: creature.x, 
+                y: creature.y,
+                visible: false,
+                BP: monsterStat.body,
+                MP: monsterStat.mind
+            }
+        });
+
+        this.setState({creatures: creatures});
+
+    }
+
+    // set defaults for body, mind, speed, stepsRemain
+    setPlayerDefaults = () => {
+        let players = this.state.player;
+
+        players.forEach((player, index) => {
+            if(player.playerName === 'Z') {
+                players[index] = player;
+            } else {
+                let raceStat = races[player.Race];
+                let classStat = classes[player.Class]; 
+
+                players[index] = {
+                    x : player.x, 
+                    y: player.y, 
+                    playerName: player.playerName, 
+                    Race: player.Race, 
+                    Class: player.Class,
+                    BP: raceStat.body + classStat.body,
+                    MP: raceStat.mind + classStat.mind,
+                    Speed: raceStat.speed + classStat.speed,
+                    stepsRemain: raceStat.speed + classStat.speed,
+                    BPRemain: raceStat.body + classStat.body,
+                    MPRemain: raceStat.mind + classStat.mind
+                };
+            }
+        });
+
+        this.setState({player: players});
     }
 
     quadCompare = (a,b,c,d) => {
@@ -402,26 +577,96 @@ class EndlessApp extends React.Component {
         return false;
     }
 
-    spaceClick = (x,y) =>{
-        alert(x + ' ' + y);
+    spaceClick = (x,y,rem) =>{
+    //   alert(x + ' ' + y + ' ' + rem);
+        let players = this.state.player;
+        let currentPlayer = this.state.currentPlayer;
+
+        let oldPos = {y: players[currentPlayer].y, x: players[currentPlayer].x}
+
+        // set player position
+        players[currentPlayer].x = x;
+        players[currentPlayer].y = y;
+
+        this.setState({player : players});
+
+        // set imap position
+        let gameMap = this.state.gameMap;
+
+        gameMap.imap[y][x] = {type: "hero", number: currentPlayer, used: false, pair: false};
+        gameMap.imap[oldPos.y][oldPos.x] = 0;
+
+        this.setState({gameMap: gameMap});
+
+        this.nextTurnClick(rem); 
+
     }
+    
+    nextTurnClick = (steps) => {
+        let currentPlayer = this.state.currentPlayer;
+        let stepsRemain = this.state.player[currentPlayer].stepsRemain - steps;
+        
+        if(steps < 0){
+            stepsRemain = 1;
+        }
+
+    //    alert(stepsRemain);
+
+        if(stepsRemain === 1 || isNaN(stepsRemain) ){
+            if(this.state.player[currentPlayer].playerName === 'Z'){
+                currentPlayer = 0;
+            } else { 
+                currentPlayer++;
+            }
+            this.setState({currentPlayer : currentPlayer});
+        }
+        let mapping = this.state.gameMap;
+
+        let speed = this.state.player[currentPlayer].Speed;
+
+        if(stepsRemain <= 1){
+            stepsRemain = speed;
+        }
+        
+        // reset steps left for player.
+        if( !isNaN(stepsRemain) ){
+            let players = this.state.player;
+            players[currentPlayer].stepsRemain = stepsRemain;
+            this.setState({player : players});
+        }
+
+        // clickmap generation, temp for now.
+        mapping.stepmap = this.findPath(this.state.player[currentPlayer].y, this.state.player[currentPlayer].x, stepsRemain, mapping.imap, mapping.compMap);
+
+        this.setState({
+            gameMap : mapping    
+        });
+    }
+
     render(){
         return(
-            <div>
-                <Map
-                    ground={this.state.gameMap.compMap}
-                    walls={this.state.gameMap.wallMap}
-                    objects={this.state.gameMap.furniture}
-                    creatures={this.state.gameMap.creatures}
-                    //spaceCallback={(x,y) => this.spaceClick(x,y)}
-                    heros={this.state.player}
+            <>
+                <div>
+                    <Map
+                        ground={this.state.gameMap.compMap}
+                        walls={this.state.gameMap.wallMap}
+                        objects={this.state.gameMap.furniture}
+                        creatures={this.state.gameMap.creatures}
+                        //spaceCallback={(x,y) => this.spaceClick(x,y)}
+                        heros={this.state.player}
+                    />
+                    <ClickMap 
+                        ground={this.state.gameMap.imap}
+                        stepMap={this.state.gameMap.stepmap}
+                        spaceCallback={(x,y,rem) => this.spaceClick(x,y,rem)}
+                    />
+                    
+                </div>
+                <TurnControl 
+                    playerID = {this.state.player[this.state.currentPlayer].playerName}
+                    callback = {(rem) => this.nextTurnClick(rem)}
                 />
-                <ClickMap 
-                    ground={this.state.gameMap.imap}
-                    stepMap={this.state.gameMap.stepmap}
-                    spaceCallback={(x,y) => this.spaceClick(x,y)}
-                />
-            </div>
+            </>
         );
     }
 }
@@ -431,8 +676,10 @@ function ClickMap(props){
     const groundMap = props.ground.map((data, y) =>{
         const row = data.map((d, x) => {
             let c='';
+            let steppable = false;
+            let dist = 0;
             if(d === 0){
-                c = 'white';
+                c = 'white hideColor';
             } else if(d === -1){
                 c = 'black';
             } else {
@@ -441,29 +688,33 @@ function ClickMap(props){
                         c = 'red';
                         break;
                     case 'door':
-                        c = 'yellow';
+                        c = 'yellow hideColor';
                         break;
                     case 'hero':
-                        c = 'green';
+                        c = 'green hideColor';
                         break;
                     case 'furniture':
-                        c = 'blue';
+                        c = 'blue hideColor';
                         break;
                     default: 
                         c = 'grey';
                         break;
                 }
             }
-            if(props.stepMap[y][x] !== false && props.stepMap[y][x] !== -1){
+            if(props.stepMap[y][x] !== false && props.stepMap[y][x] !== -1 && d.type !== 'hero'){
                 c = 'orange';
+                steppable = true;
+                dist = props.stepMap[y][x];
             }
             return(
                 <ClickSquare
                     key={y + '-' + x}
                     className={c}
-                    callback={(x,y) => props.spaceCallback(x,y)}
+                    callback={(x,y,rem) => props.spaceCallback(x,y,rem)}
+                    steppable = {steppable}
                     x={x}
                     y={y}
+                    rem={dist}
                 />
             );
         });
@@ -484,12 +735,22 @@ function ClickMap(props){
 }
 
 function ClickSquare(props){
-    return(
-        <div 
-            className={"clickSpace " + props.className}
-            onClick={(x,y) => props.callback(props.x, props.y)}
-        />
-    );
+    if(props.steppable){
+        return(
+            <div 
+                className={"clickSpace " + props.className}
+                onClick={(x,y,rem) => props.callback(props.x, props.y, props.rem)}
+            />
+        );
+    }
+    else {
+        return(
+            <div 
+                className={"clickSpace " + props.className}
+            />
+        );
+    }
+
 }
 
 function Map(props){
@@ -629,8 +890,6 @@ function WallCorner(props){
     )
 }
 
-export {EndlessApp};
-
 function Door(props){
     return(
         <div 
@@ -671,3 +930,5 @@ function Hero(props){
         </div>
     )
 }
+
+export {EndlessApp};

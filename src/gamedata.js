@@ -1,12 +1,19 @@
 // dice as {fa}
+
+// magic weapons, come in lesser and greater
+// lesser add 1 cross sword, greater adds 2
+// other special magic items have individual effects.
+
 const dice = {
     faces : ["Black Shield", "Shield", "Shield", "Sword", "Sword", "Cross Swords"],
     icon : [], // for later use.
     playerAttVal : ["*", 0, 0, 1, 1, 2], // * is a point of damage to weapon.
-    playerDefVal : ["*", 1, 1, 0, 0, 0], // -1 is a point of damage to armor
+    playerDefVal : ["*", 1, 1, 0, 0, 0], // * is a point of damage to armor
     enemyAttVal :  [  0, 0, 0, 1, 1, 2], // enemies get no bonuses or penalties on attack.
     enemyDefVal :  [  1, 0, 0, 0, 0, 0]  
 };
+
+
 
 const weapons = {
     Close : ["Dagger", "Warhammer", "Flail", "Longsword", "Greataxe"],
@@ -58,24 +65,24 @@ const furniture = {
 
 
 const classes = [
-    {name : "Fighter",  body : 6, mind : 2, armor : 2, weapon : {distance : "Close", level : 2}},   
+    {name : "Fighter",  body : 6, mind : 2, armor : 2, speed: 2, weapon : {distance : "Close", level : 2}},   
         // +1 in close melee combat
-    {name : "Mage",     body : 3, mind : 5, armor : 2, weapon : {distance : "Close", level : 1}},
+    {name : "Mage",     body : 3, mind : 5, armor : 2, speed: 1, weapon : {distance : "Close", level : 1}},
         // large spell list, starts with 3 schools, recovers 3 per level
-    {name : "Cleric",   body : 4, mind : 4, armor : 3, weapon : {distance : "Close", level : 2}},
+    {name : "Cleric",   body : 4, mind : 4, armor : 3, speed: 0, weapon : {distance : "Close", level : 2}},
         // healer/protection spell list, starts with heal school and abjuration school, recovers 2 per level
-    {name : "Thief",    body : 5, mind : 3, armor : 2, weapon : {distance : "Long", level : 2}},
+    {name : "Thief",    body : 5, mind : 3, armor : 2, speed: 4, weapon : {distance : "Long", level : 2}},
         // unlock locked doors or disarm traps 5/6
 ];
 
 const races = [
-    {name : "Human",    body : 1, mind : 1, speed : 8},
+    {name : "Human",    body : 1, mind : 1, speed : 7},
         // Versatile, act as +1 to mind and body when using equipment or learning spells 
-    {name : "Elf",      body : 0, mind : 2, speed : 8},
+    {name : "Elf",      body : 0, mind : 2, speed : 7},
         // small starting spell list, starts with nature list, recovers 1 / level
-    {name : "Dwarf",    body : 2, mind : 0, speed : 6},
+    {name : "Dwarf",    body : 2, mind : 0, speed : 5},
         // smithwork : weapons and armor ignore 1 point of wear from black shields
-    {name : "Halfling", body : 1, mind : 1, speed : 10} 
+    {name : "Halfling", body : 1, mind : 1, speed : 9} 
         // draw extra "search" card
 ];
 
@@ -117,7 +124,7 @@ const spells = {
         Conjuration : [
             {name: "Teleport", effect : {}},    // within known areas
             {name: "Wall of Stone", effect : {}},   // 2 spaces
-            {name: "Magic Ammo", effect : {}},    // 1 ranged weapon no ammo use
+            {name: "Magic Ammo", effect : {}},    // 1 ranged weapon no ammo use for rest of level
         ],
         Evocation : [
             {name: "Fireball", effect : {}},    // 1 damage 3x3
