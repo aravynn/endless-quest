@@ -244,15 +244,48 @@ $fcolor: #999;
     top: 0;
     border: 3px solid #444;
     border-width: 0 0 3px 3px;
-    width: 100px;
-    height: 60px;
+    width: 142px;
+    height: 285px;
     z-index: 10000;
     background-color: #eee;   
     padding: 10px;
     border-radius: 0px 0px 0px 10px;
 
     button {
-        margin-top: 10px;
+        margin: 10px;
+        display: block;
+        width: 100px;
+        height: 20px;
+
+        &.endTurn{
+            width: 120px;
+            height: 30px;
+            background-color: #fa6;
+            border: 1px solid #943;
+            border-radius: 3px;
+            transition: color .2s, border-color .2s, background-color .2s;
+
+            &:hover {
+                background-color: #a00;
+                color: #fff;
+                border-color: #600;
+            }
+        }
+    }
+
+    .actionFrame {
+        border: 1px solid black;
+        position: relative;
+        margin: 10px;
+
+        label{
+            position: absolute;
+            top: -7px;
+            left: 5px;
+            font-size: 12px;
+            background-color: #eee;
+            padding: 0 4px;
+        }
     }
 
 }

@@ -11,19 +11,39 @@ D       - pre-define race/class of each player - presets down the list
 D        - pre-calculate speed, body, mind, of each player.
 D            - set stepsRemain too.
 D        - apply base speed for each member in procs
-     - hide coloring on click level, except on attack, move, spell/ability
+D     - hide coloring on click level, except on attack, move, spell/ability
 D       - always show eligible spots on movement, other characters are not eligible spot
-            - after moving a character from a spot, revert the spot to previous status. (not just 0) use a refresh function for imap
-            - instead of setting monsters and players on the map, check them programattically.
-        - only show red on creatures that are in attack range
+D           - after moving a character from a spot, revert the spot to previous status. (not just 0) use a refresh function for imap
+D           - instead of setting monsters and players on the map, check them programattically.
     - add other player actions, attack, spell, skill 
-    - switching to other action ends movement
+D       - add buttons for attack, spell, use item, search room 
+D       - draft in callbacks.
+D       - clean up control appearance you bum. 
+D       - display steps remaining on description
+D       - display action left on description
+D           - add action functionality to member
+D       - remove turn end on movement done, unless all other actions done.
+D           - check end turn function for current player
+D           - temp - use action on any action button clicked
+D           - disable move or other buttons once that action grouping is taken. 
+        - create dummy inventory
+        - create pop-up menu for weapons, spells, items
+        - display targets on action/item combo clicked
+        - hide movement when action picked.
+        - click monster to effect attack etc.
+            - only show red on creatures that are in attack range
+            - black out monsters that are dead.
+        - switching to other action ends movement
+
+    
     - set door open on moving into a room
+    - things invisible until room opened
     - monster movement
     - monster actions spell, attack
     - monster inactive when invisible
     - on door, option to "open door" on sidebar
     - check for obstructions for creatures in attack range.
+    - fix furniture issue on findpath
 
 Ideas:
 Monsters can have low or high defence, based on type. 

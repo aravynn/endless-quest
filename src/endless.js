@@ -17,10 +17,10 @@ class EndlessApp extends React.Component {
         this.state = {
             gameStart : true,   // define what screen to load.
             player : [
-                {x : 1, y: 14, playerName: '1', Race: 0, Class: 0},
-                {x : 2, y: 14, playerName: '2', Race: 1, Class: 1},
-                {x : 1, y: 15, playerName: '3', Race: 2, Class: 2},
-                {x : 2, y: 15, playerName: '4', Race: 3, Class: 3},
+                {x : 1, y: 14, playerName: '1', Race: 0, Class: 0, action: 1},
+                {x : 2, y: 14, playerName: '2', Race: 1, Class: 1, action: 1},
+                {x : 1, y: 15, playerName: '3', Race: 2, Class: 2, action: 1},
+                {x : 2, y: 15, playerName: '4', Race: 3, Class: 3, action: 1},
                 {x:-1,  y: -1, playerName: 'Z'}
             ],
             currentPlayer : 0,
@@ -163,12 +163,10 @@ class EndlessApp extends React.Component {
 
         mapping.compMap = Array(mapping.height);
         mapping.wallMap = Array(mapping.height);
-        mapping.imap = Array(mapping.height);
 
         for(let y = 0; y < mapping.height; y++){
             mapping.compMap[y] = Array(mapping.width).fill(-1); // -1 is nothing.
             mapping.wallMap[y] = Array(mapping.width);
-            mapping.imap[y] = Array(mapping.width).fill(0); // 0 is for movable.
         }
         
         mapping.rooms.forEach((data, index) => {
@@ -217,8 +215,6 @@ class EndlessApp extends React.Component {
         // doors
         mapping.door.forEach((d, i) => {
             // assign door after determining Xand Y for WHERE door is.
-            mapping.imap[d.y1][d.x1] = {type: "door", number: i, used: false, pair: [d.y2, d.x2]};
-            mapping.imap[d.y2][d.x2] = {type: "door", number: i, used: false, pair: [d.y1, d.x1]};
             
             if(d.x1 < d.x2){
                 mapping.wallMap[d.y1][d.x1].e = 1;
@@ -239,42 +235,9 @@ class EndlessApp extends React.Component {
             // x, y, type, rotate
             mapping.wallMap[data.y][data.x].f = data;
             
-            // imap more complicated here. for impassible object
-            // that have no interaction we need to set as -1
-            // everything else is set as array for number etc.
-            let f = furniture[data.type];
-            let h = f.h;
-            let w = f.w;
-            if(data.rotate === "e" || data.rotate === "w"){
-                // swap width/height
-                let d = h;
-                h = w;
-                w = d;
-            }
-            for(let y = data.y; y < data.y + h; y++){
-                for(let x = data.x; x < data.x + w; x++){
-                    if(f.blockMove){
-                        mapping.imap[y][x] = -1; // inactive, blocked.
-                    } else {
-                        //interaction
-                        mapping.imap[y][x] = {type: "furniture", number: index, used: false, pair: false};
-                    }
-                }
-            }
-
         });
 
-        // map creatures, heros to imap
-        mapping.creatures.forEach((d, i) => {
-            mapping.imap[d.y][d.x] = {type: "monster", number: i, used: false, pair: false};
-        });
-
-        // heros
-        this.state.player.forEach((d, i) =>{
-            if(d.playerName !== 'Z'){
-                mapping.imap[d.y][d.x] = {type: "hero", number: i, used: false, pair: false};
-            }
-        });
+        mapping.imap = this.createIMap();
 
         this.setPlayerDefaults();
 
@@ -455,7 +418,8 @@ class EndlessApp extends React.Component {
                     Speed: raceStat.speed + classStat.speed,
                     stepsRemain: raceStat.speed + classStat.speed,
                     BPRemain: raceStat.body + classStat.body,
-                    MPRemain: raceStat.mind + classStat.mind
+                    MPRemain: raceStat.mind + classStat.mind,
+                    action: 1
                 };
             }
         });
@@ -570,7 +534,8 @@ class EndlessApp extends React.Component {
                     case 'monster':
                         return false;
                     case 'furniture':
-                        return !furniture[space.number].blockMove;
+                        // -------------------------------------------------------------!!
+                        return false;//!furniture[space.number].blockMove;
                 }
             }
         }
@@ -582,7 +547,7 @@ class EndlessApp extends React.Component {
         let players = this.state.player;
         let currentPlayer = this.state.currentPlayer;
 
-        let oldPos = {y: players[currentPlayer].y, x: players[currentPlayer].x}
+        //let oldPos = {y: players[currentPlayer].y, x: players[currentPlayer].x}
 
         // set player position
         players[currentPlayer].x = x;
@@ -593,8 +558,10 @@ class EndlessApp extends React.Component {
         // set imap position
         let gameMap = this.state.gameMap;
 
-        gameMap.imap[y][x] = {type: "hero", number: currentPlayer, used: false, pair: false};
-        gameMap.imap[oldPos.y][oldPos.x] = 0;
+        //gameMap.imap[y][x] = {type: "hero", number: currentPlayer, used: false, pair: false};
+        //gameMap.imap[oldPos.y][oldPos.x] = 0;
+
+        gameMap.imap = this.createIMap();
 
         this.setState({gameMap: gameMap});
 
@@ -606,13 +573,15 @@ class EndlessApp extends React.Component {
         let currentPlayer = this.state.currentPlayer;
         let stepsRemain = this.state.player[currentPlayer].stepsRemain - steps;
         
+        let actionsRemain = this.state.player[currentPlayer].action;
+
         if(steps < 0){
             stepsRemain = 1;
         }
 
     //    alert(stepsRemain);
 
-        if(stepsRemain === 1 || isNaN(stepsRemain) ){
+        if((stepsRemain === 1 || isNaN(stepsRemain)) && actionsRemain < 1 ){
             if(this.state.player[currentPlayer].playerName === 'Z'){
                 currentPlayer = 0;
             } else { 
@@ -624,14 +593,19 @@ class EndlessApp extends React.Component {
 
         let speed = this.state.player[currentPlayer].Speed;
 
-        if(stepsRemain <= 1){
+        if(stepsRemain <= 1 && actionsRemain < 1){
             stepsRemain = speed;
+            actionsRemain = 1;
         }
-        
+
         // reset steps left for player.
         if( !isNaN(stepsRemain) ){
             let players = this.state.player;
             players[currentPlayer].stepsRemain = stepsRemain;
+            
+            // we need to reset actions for next player.
+            players[currentPlayer].action = actionsRemain;
+
             this.setState({player : players});
         }
 
@@ -641,6 +615,41 @@ class EndlessApp extends React.Component {
         this.setState({
             gameMap : mapping    
         });
+    }
+
+    attackClick = () => {
+        this.useAction();
+        alert ("Attack");
+    }
+
+    spellClick = () => {
+        this.useAction();
+        alert ("Cast Spell");
+    }
+
+    itemClick = () => {
+        this.useAction();
+        alert ("Use Item");
+    }
+
+    searchRoomClick = () => {
+        this.useAction();
+        alert ("Search Room");
+    }
+
+    moveClick = () => {
+        alert ("Moving");
+    }
+
+    useAction = () => {
+        let players = this.state.player;
+        let currentPlayer = this.state.currentPlayer;
+
+        players[currentPlayer].action -= 1;
+
+        this.setState({player: players});
+
+        this.nextTurnClick(0);
     }
 
     render(){
@@ -664,7 +673,14 @@ class EndlessApp extends React.Component {
                 </div>
                 <TurnControl 
                     playerID = {this.state.player[this.state.currentPlayer].playerName}
-                    callback = {(rem) => this.nextTurnClick(rem)}
+                    EndTurnCallback = {(rem) => this.nextTurnClick(rem)}
+                    MoveCallback={() => this.moveClick()}
+                    AttackCallback={() => this.attackClick()}
+                    SpellCallback={() => this.spellClick()}
+                    UseItemCallback={() => this.itemClick()}
+                    SearchCallback={() => this.searchRoomClick()}
+                    stepsRemain={this.state.player[this.state.currentPlayer].stepsRemain}
+                    actionsRemain={this.state.player[this.state.currentPlayer].action} 
                 />
             </>
         );
