@@ -18,10 +18,15 @@ const dice = {
 const weapons = {
     Close : ["Dagger", "Warhammer", "Flail", "Longsword", "Greataxe"],
     Medium : ["Whip", "Staff", "Spear", "Halberd", "Glaive"], 
-    Long : ["Sling", "Shortbow", "Longbow", "Crossbow", "Arbalest"],
+    Long : ["Sling", "Shortbow", "Longbow", "Crossbow", "Arbalest"], // cannot be used in medium range.
     Ammo : ["Stones", "Arrows", "Arrows", "Bolts", "Bolts"],
     defaultDice : [1,2,3,4,5],   //  defined explicitly.
-    bodyScore : [1,2,4,6,8] // min body required to use an item.
+    bodyScore : [1,2,4,6,8], // min body required to use an item.
+    durability : [
+        [5,7,9,11,13],
+        [2,4,6,9,12],
+        [1,3,5,8,11]
+    ]
 };
 
 const armors = {
@@ -29,6 +34,12 @@ const armors = {
     defaultDice : [1,2,3,4,5,6],
     bodyScore : [5,3,4,5,6,7]
 };
+
+const loot = [
+    {name : "Heal Potion", effect: ''},
+    {name : "Mana Potion", effect: ''}
+
+]
 
 const furniture = {
     // furniture for display on the main app. 
@@ -73,6 +84,8 @@ const classes = [
         // healer/protection spell list, starts with heal school and abjuration school, recovers 2 per level
     {name : "Thief",    body : 5, mind : 3, armor : 2, speed: 4, weapon : {distance : "Long", level : 2}},
         // unlock locked doors or disarm traps 5/6
+    {name: "Ranger",    body : 4, mind : 5, armor : 2, speed: 2, weapon : {distance : "long", level : 2}}
+        // +1 to close range
 ];
 
 const races = [
@@ -196,4 +209,4 @@ const spells = {
     monster : []
 }
 
-export {dice, weapons, armors, classes, races, monsters, spells, furniture};
+export {dice, weapons, armors, classes, races, monsters, spells, furniture, loot};

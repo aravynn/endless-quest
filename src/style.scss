@@ -245,7 +245,7 @@ $fcolor: #999;
     border: 3px solid #444;
     border-width: 0 0 3px 3px;
     width: 142px;
-    height: 285px;
+//    height: $actionPaneHeight;
     z-index: 10000;
     background-color: #eee;   
     padding: 10px;
@@ -261,7 +261,7 @@ $fcolor: #999;
             width: 120px;
             height: 30px;
             background-color: #fa6;
-            border: 1px solid #943;
+            border: 1px solid #d95;
             border-radius: 3px;
             transition: color .2s, border-color .2s, background-color .2s;
 
@@ -275,6 +275,7 @@ $fcolor: #999;
 
     .actionFrame {
         border: 1px solid black;
+        border-radius: 2px;
         position: relative;
         margin: 10px;
 
@@ -285,6 +286,24 @@ $fcolor: #999;
             font-size: 12px;
             background-color: #eee;
             padding: 0 4px;
+        }
+
+        &.highlight{
+            border-color: #020;
+            
+            
+            button {
+                border: 1px solid #866;
+                background-color: #fee;
+                border-radius: 3px;
+                transition: color .5s, border-color .5s, background-color .5s;
+
+                &:hover {
+                    background-color: #f00;
+                    border-color: #900;
+                    color: #fff;
+                }
+            }
         }
     }
 

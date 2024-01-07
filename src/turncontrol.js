@@ -1,5 +1,5 @@
 import React from 'react';
-
+import {ActionPanel} from './actionPanel.js'
 
 function TurnControl(props){
     // returns the controller for running who's turn it is.
@@ -7,6 +7,7 @@ function TurnControl(props){
     let haveMovement = props.stepsRemain > 1 ? true : false;
 
     return(
+        <>
         <div
             className = "turncontrolwrapper"
         >
@@ -55,7 +56,10 @@ function TurnControl(props){
                     Search Room
                 </button>
             </div>
-
+            <ActionPanel 
+                name = {props.playerAction}
+                actionList = {props.inventory}
+            />
             <button
                 onClick = {(rem) => props.EndTurnCallback(-1)}
                 className="endTurn"
@@ -63,7 +67,8 @@ function TurnControl(props){
                 Next Turn
             </button>
         </div>
-
+        
+        </>
     );
 }
 

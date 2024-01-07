@@ -2,7 +2,7 @@ import React from 'react';
 
 //global game data.
 //import {dice, weapons, armors, classes, races, monsters} from 'gamedata';
-import {monsters, furniture, classes, races} from './gamedata';
+import {monsters, furniture, classes, races, loot, dice} from './gamedata';
 import {TurnControl} from './turncontrol';
 
 // globally required for the map size.
@@ -24,6 +24,7 @@ class EndlessApp extends React.Component {
                 {x:-1,  y: -1, playerName: 'Z'}
             ],
             currentPlayer : 0,
+            playerAction : '',
             gameMap : {
                 // build as checking right and down for if a space is in a room. 
                 //if it is, we'll make a wall.
@@ -407,6 +408,26 @@ class EndlessApp extends React.Component {
                 let raceStat = races[player.Race];
                 let classStat = classes[player.Class]; 
 
+                // TEMP: Generate a list of inventory until we get all real inventory.
+                // for now we will apply several items from each group and replace it later.
+                let inventory = {
+                    weapons: [
+                        {Type:'Close', Level: 2},
+                        {Type:'Medium', Level: 1},
+                        {Type:'Long', Level: 4}
+                    ],
+                    ammunition: [
+                        10, // stones
+                        10, // arrows
+                        10  // bolts
+                    ],
+                    armor: [3,0],
+                    items: [{item: 0, count: 2}, {item: 1, count: 1}],
+                    spells: []
+
+                }
+
+
                 players[index] = {
                     x : player.x, 
                     y: player.y, 
@@ -419,7 +440,8 @@ class EndlessApp extends React.Component {
                     stepsRemain: raceStat.speed + classStat.speed,
                     BPRemain: raceStat.body + classStat.body,
                     MPRemain: raceStat.mind + classStat.mind,
-                    action: 1
+                    action: 1,
+                    inventory: inventory
                 };
             }
         });
@@ -618,22 +640,22 @@ class EndlessApp extends React.Component {
     }
 
     attackClick = () => {
-        this.useAction();
+        this.useAction("Attack");
         alert ("Attack");
     }
 
     spellClick = () => {
-        this.useAction();
+        this.useAction("Spell");
         alert ("Cast Spell");
     }
 
     itemClick = () => {
-        this.useAction();
+        this.useAction("Item");
         alert ("Use Item");
     }
 
     searchRoomClick = () => {
-        this.useAction();
+        this.useAction("Search");
         alert ("Search Room");
     }
 
@@ -641,15 +663,52 @@ class EndlessApp extends React.Component {
         alert ("Moving");
     }
 
-    useAction = () => {
+    useAction = (action) => {
         let players = this.state.player;
         let currentPlayer = this.state.currentPlayer;
 
         players[currentPlayer].action -= 1;
 
-        this.setState({player: players});
+        this.setState({player: players, playerAction: action});
 
         this.nextTurnClick(0);
+    }
+
+    rollDice = (count) => {
+        // roll count dice and return totals of each roll. 
+        // this only returns the counts in an array as: 
+        // [0] => black shields
+        // [1] => white shields
+        // [2] => swords
+        // [3] => display value as list of vals.
+
+        let ret = [0,0,0,''];
+
+        for(let i = 0; i < count; i++){
+            switch(Math.floor(Math.random()*6)){
+                case 0:
+                    ret[0]++;
+                    ret[3] = ret[3] + ' Black Shield';
+                    break;
+                case 1:
+                case 2:
+                    ret[1]++;
+                    ret[3] = ret[3] + ' Shield';
+                    break;
+                case 3:
+                case 4:
+                    ret[2]++;
+                    ret[3] = ret[3] + ' Sword';
+                    break;
+                case 5:
+                default:
+                    ret[2] += 2;
+                    ret[3] = ret[3] + ' Crossed Swords';
+                    break;           
+            }
+        }
+
+        return ret;
     }
 
     render(){
@@ -681,6 +740,8 @@ class EndlessApp extends React.Component {
                     SearchCallback={() => this.searchRoomClick()}
                     stepsRemain={this.state.player[this.state.currentPlayer].stepsRemain}
                     actionsRemain={this.state.player[this.state.currentPlayer].action} 
+                    playerAction={this.state.playerAction}
+                    inventory={this.state.player[this.state.currentPlayer].inventory}
                 />
             </>
         );

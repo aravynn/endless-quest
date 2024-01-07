@@ -28,6 +28,13 @@ D           - temp - use action on any action button clicked
 D           - disable move or other buttons once that action grouping is taken. 
         - create dummy inventory
         - create pop-up menu for weapons, spells, items
+            - import from gamedata
+D           - in actionpanel set to receive type as well as character info
+                - name, actionList
+            - create script to pull the list of data for buttons
+            - create a props-like struct to pass to callback function
+            - create callback function with basic alert
+        - only remove action after action used.
         - display targets on action/item combo clicked
         - hide movement when action picked.
         - click monster to effect attack etc.
@@ -35,7 +42,7 @@ D           - disable move or other buttons once that action grouping is taken.
             - black out monsters that are dead.
         - switching to other action ends movement
 
-    
+    - dice roll visible mechanic
     - set door open on moving into a room
     - things invisible until room opened
     - monster movement
@@ -44,6 +51,8 @@ D           - disable move or other buttons once that action grouping is taken.
     - on door, option to "open door" on sidebar
     - check for obstructions for creatures in attack range.
     - fix furniture issue on findpath
+    - hover monster, to see stat block
+    - hover inventory to see detail
 
 Ideas:
 Monsters can have low or high defence, based on type. 
